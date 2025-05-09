@@ -1,4 +1,4 @@
-# Máy tính Bỏ Túi Thông Minh - Android
+# Máy tính Bỏ Túi - Android
 
 Đây là một ứng dụng máy tính bỏ túi đơn giản được phát triển cho nền tảng Android bằng ngôn ngữ Java. Ứng dụng cho phép người dùng thực hiện các phép tính số học cơ bản một cách dễ dàng và nhanh chóng.
 
