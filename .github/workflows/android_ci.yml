@@ -1,0 +1,67 @@
+# Tên của Workflow này (hiển thị trên tab Actions của GitHub)
+name: Android CI
+
+# Định nghĩa khi nào Workflow sẽ chạy
+on:
+  # Chạy khi có commit được push lên các branch được liệt kê
+  push:
+    branches:
+      - main  # Hoặc 'master', tùy thuộc tên branch chính của bạn
+
+  # Chạy khi có Pull Request được mở hoặc cập nhật hướng đến các branch được liệt kê
+  pull_request:
+    branches:
+      - main  # Hoặc 'master'
+
+# Định nghĩa các "công việc" (jobs) sẽ được thực hiện
+jobs:
+  # Công việc đầu tiên: build và test
+  build:
+    # Máy chủ ảo sẽ chạy công việc này (sử dụng Ubuntu Linux mới nhất)
+    runs-on: ubuntu-latest
+
+    # Các bước (steps) trong công việc "build"
+    steps:
+      # Bước 1: Lấy mã nguồn từ repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Bước 2: Thiết lập môi trường JDK (Gradle cần Java)
+      # Sử dụng JDK 17, phù hợp với hầu hết các project Android hiện đại
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # Sử dụng bản phân phối OpenJDK đáng tin cậy
+          java-version: '17'      # Chọn phiên bản JDK 17
+          cache: 'gradle'         # Cache các dependencies của Gradle để tăng tốc build
+
+      # Bước 3: Cấp quyền thực thi cho Gradle Wrapper (gradlew)
+      # Cần thiết để chạy các lệnh Gradle trên môi trường Linux/macOS
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # Bước 4: Chạy Unit Tests
+      # Tác vụ này chạy test trong thư mục src/test
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest
+
+
+      # Bước 5: Chạy Instrumented Tests (UI Tests)
+      # Tác vụ này cần khởi động máy ảo trên môi trường GitHub để chạy test trong src/androidTest
+      - name: Run Instrumented Tests
+        # Môi trường GitHub Actions đã được cấu hình để chạy AVD cho tác vụ này
+        run: ./gradlew connectedDebugAndroidTest
+
+      # Bước 6: Build File APK (tùy chọn, nếu bạn muốn tải APK sau khi build)
+      # Bạn có thể bỏ qua bước này nếu chỉ cần chạy test
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      # Bước 7: Upload APK như một Artifact (tùy chọn)
+      # Cho phép bạn tải file APK đã build từ kết quả chạy GitHub Actions
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk # Tên của artifact
+          path: app/build/outputs/apk/debug/app-debug.apk # Đường dẫn đến file APK sau khi build
+          # retention-days: 5 # Số ngày lưu trữ artifact (tùy chọn)
